@@ -28,22 +28,15 @@
       images.forEach(function (image) {
         var img = new Image()
         var ratio = image.width_m / image.height_m
-        var elm = document.createElement('div')
-        elm.className = `${className}__element loading`
-        elm.setAttribute('data-image', image.url_l)
-        elm.style.flexBasis = gridBasis*ratio + 'px'
-        elm.style.flexGrow = ratio
-        var hover = document.createElement('div')
-        hover.className = `${className}__title`
-        hover.innerHTML = '<p>'+image.title+'</p>'
-        attachTo.appendChild(elm)
-
-        img.onload = function() {
-          elm.appendChild(img)
-          elm.appendChild(hover)
-          elm.classList.remove('loading')
-        }
-        img.src = image.url_m
+        const elm = `<div class="${className}__element"
+               data-image="${image.url_l}"
+               style="flex-basis: ${gridBasis*ratio}px; flex-grow: ${ratio}">
+            <img src="${image.url_m}">
+            <div class="${className}__title">
+              <p>${image.title}</p>
+            </div>
+          </div>`
+        insert("grid", elm)
       })
     }
   }
@@ -84,7 +77,7 @@
 
       switch (e.key) {
         case 'ArrowRight':
-          nextImg = currentImg.nextSibling
+          nextImg = currentImg.nextElementSibling
           if (!nextImg) break
 
           modal.classList.add('fly-left')
@@ -95,7 +88,7 @@
           }
           break
         case 'ArrowLeft':
-          nextImg = currentImg.previousSibling
+          nextImg = currentImg.previousElementSibling
           if (! nextImg) break
 
           modal.classList.add('fly-right')
@@ -122,15 +115,14 @@
   }
 
   const insert = (elementId, template) =>  {
-    var elm = document.createElement('div')
+    const elm = document.createElement('div')
     elm.innerHTML = template
-    document.getElementById(elementId).appendChild(elm)
+    document.getElementById(elementId).innerHTML += elm.innerHTML
   }
 
   const getInfo = response => {
     const {title, description, username} = response.photoset;
-    const template = `
-      <div class="heading" id="heading">
+    const template = `<div class="heading" id="heading">
         <h1>${title._content}</h1>
         <h2>${description._content}</h2>
         <p>
@@ -139,8 +131,7 @@
             ${username}
           </a>
         </p>
-      </div>
-    `;
+      </div>`;
     insert("head", template)
   }
 
@@ -172,7 +163,7 @@
   }
   .grid__element {
     position: relative;
-    margin: 2px;
+    margin: 5px;
     line-height: 0;
     cursor: pointer;
   }

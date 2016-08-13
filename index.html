@@ -30,7 +30,7 @@
         var ratio = image.width_m / image.height_m
         var elm = document.createElement('div')
         elm.className = `${className}__element loading`
-        elm.setAttribute('data-image', image.url_o)
+        elm.setAttribute('data-image', image.url_l)
         elm.style.flexBasis = gridBasis*ratio + 'px'
         elm.style.flexGrow = ratio
         var hover = document.createElement('div')
@@ -91,7 +91,7 @@
           modalImage.onload = () => {
             modal.classList.remove('fly-left')
             modal.classList.add('flybackright')
-            setTimeout(() => { modal.classList.remove('flybackright') }, 5000)
+            setTimeout(() => { modal.classList.remove('flybackright') }, 500)
           }
           break
         case 'ArrowLeft':
@@ -102,7 +102,7 @@
           modalImage.onload = () => {
             modal.classList.remove('fly-right')
             modal.classList.add('flybackleft')
-            setTimeout(() => { modal.classList.remove('flybackleft') }, 5000)
+            setTimeout(() => { modal.classList.remove('flybackleft') }, 500)
           }
           break
         case 'Escape':
@@ -116,7 +116,7 @@
           currentImg.classList.remove('active')
           nextImg.classList.add('active')
           modalImage.src = nextImg.getAttribute('data-image')
-        }, 5000)
+        }, 500)
       }
     }, false)
   }
@@ -213,7 +213,7 @@
   }
 
   .modal.fly-left div {
-    animation-duration: 5s;
+    animation-duration: .5s;
     animation-name: fly-left;
     animation-fill-mode: forwards;
   }
@@ -225,13 +225,13 @@
   }
 
   .modal.flybackright div {
-    animation-duration: 5s;
+    animation-duration: .5s;
     animation-name: flybackright;
     animation-fill-mode: forwards;
   }
 
   .modal.flybackleft div {
-    animation-duration: 5s;
+    animation-duration: .5s;
     animation-name: flybackleft;
     animation-fill-mode: forwards;
   }

@@ -15,6 +15,11 @@
     const part = str.split(':');
     return `https://gist.githubusercontent.com/${part[0]}/${part[1]}/raw/Meta.json`
   }
+  const insert = (elementId, template) =>  {
+    const elm = document.createElement('div')
+    elm.innerHTML = template
+    byId(elementId).innerHTML += elm.innerHTML
+  }
 
   let modalImage, modal;
 
@@ -24,7 +29,7 @@
       this.className = className
     }
 
-    buildGrid(images, attachTo, gridBasis=this.gridBasis, className=this.className) {
+    buildGrid(images, gridBasis=this.gridBasis, className=this.className) {
       images.forEach(function (image) {
         var img = new Image()
         var ratio = image.width_m / image.height_m
@@ -41,6 +46,22 @@
     }
   }
 
+  const closeModal = () => {
+    document.querySelector('.active').classList.remove('active')
+    byId('modal').classList.remove('show')
+    modalImage.onload = null
+  }
+
+  const fly = (direction) => {
+    const opposite = direction === 'left' ? 'right' : 'left'
+    modal.classList.add(`fly-${direction}`)
+    modalImage.onload = () => {
+      modal.classList.remove(`fly-${direction}`)
+      modal.classList.add(`flyback${opposite}`)
+      setTimeout(() => { modal.classList.remove(`flyback${opposite}`) }, 500)
+    }
+  }
+
   const init = () => {
     const urlHash = getHash()
     if (!urlHash) {
@@ -50,15 +71,17 @@
     const metaInfo = convertBase64(urlHash)
     const url = metaUrl(metaInfo)
 
-    modalImage = document.getElementById('image')
-    modal = document.getElementById('modal')
+    modalImage = byId('image')
+    modal = byId('modal')
 
+    // Fetch json container
     fetchJson(url, response => {
+      // Once we've got our json container fetch photoset info and the actuall photos
       fetchJson(response.info, getInfo)
       fetchJson(response.photoset, getPhotos)
     })
 
-    byId('modal').addEventListener('click', e => byId('modal').classList.remove('show'))
+    byId('modal').addEventListener('click', closeModal)
 
     byId('grid').addEventListener('click', e => {
       byId('image').src = e.path[1].getAttribute('data-image')
@@ -69,7 +92,6 @@
     window.addEventListener('keydown', e => {
       var nextImg
       var currentImg = document.querySelector('.active')
-
       modal.classList.remove('fly-right')
       modal.classList.remove('fly-left')
       modal.classList.remove('flybackright')
@@ -79,28 +101,15 @@
         case 'ArrowRight':
           nextImg = currentImg.nextElementSibling
           if (!nextImg) break
-
-          modal.classList.add('fly-left')
-          modalImage.onload = () => {
-            modal.classList.remove('fly-left')
-            modal.classList.add('flybackright')
-            setTimeout(() => { modal.classList.remove('flybackright') }, 500)
-          }
+          fly('left')
           break
         case 'ArrowLeft':
           nextImg = currentImg.previousElementSibling
           if (! nextImg) break
-
-          modal.classList.add('fly-right')
-          modalImage.onload = () => {
-            modal.classList.remove('fly-right')
-            modal.classList.add('flybackleft')
-            setTimeout(() => { modal.classList.remove('flybackleft') }, 500)
-          }
+          fly('right')
           break
         case 'Escape':
-          document.getElementById('modal').classList.remove('show')
-          modalImage.onload = null
+          closeModal()
           break
       }
 
@@ -112,12 +121,6 @@
         }, 500)
       }
     }, false)
-  }
-
-  const insert = (elementId, template) =>  {
-    const elm = document.createElement('div')
-    elm.innerHTML = template
-    document.getElementById(elementId).innerHTML += elm.innerHTML
   }
 
   const getInfo = response => {
@@ -135,19 +138,19 @@
     insert("head", template)
   }
 
+  /*
+   * Set a cover photo for the photoset.
+   * If no primary photo is selected default to the first photo in the photoset
+   **/
   const setCoverPhoto = photoset => {
     var primary = photoset.photo.filter(photo => photo.isprimary == '1')
     primary = primary.length ? primary[0] : photos[0]
-    document.getElementById('header').style.backgroundImage = "url("+primary.url_o+")"
+    byId('header').style.backgroundImage = `url(${primary.url_o})`
   }
 
   const getPhotos = response => {
     setCoverPhoto(response.photoset)
-    const grid = new ImageGrid()
-    const attachTo = document.getElementById('grid')
-
-    // Append all images to #grid
-    grid.buildGrid(response.photoset.photo, attachTo)
+    new ImageGrid().buildGrid(response.photoset.photo)
   }
   </script>
   <style>
@@ -158,19 +161,21 @@
     background: #f7f8fa;
     border-top: 1px solid #eeeff2;
   }
-  .grid img {
-    width: 100%;
-  }
+
+  .grid img { width: 100%; }
+
   .grid__element {
     position: relative;
     margin: 5px;
     line-height: 0;
     cursor: pointer;
   }
+
   .grid__element:hover .grid__title {
     opacity: 1;
     transition: opacity .4s;
   }
+
   .grid__title {
     opacity: 0;
     position: absolute;
@@ -181,15 +186,15 @@
     padding: 20px 10px 15px;
     background: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.7) 100%);
   }
+
   .grid__title p {
-    font: 14px/1 'Fauna One', Georgia, serif;
+    font: 14px/1 Arial, Helvetica, sans-serif;
     color: #fff;
     margin: 0;
   }
 
   .modal {
     position: fixed;
-    font-family: Arial, Helvetica, sans-serif;
     top: 0;
     right: 0;
     bottom: 0;
@@ -199,9 +204,8 @@
     display: none;
     transition: opacity .4s ease-in;
   }
-  .modal.show {
-    display: block
-  }
+
+  .modal.show { display: block }
 
   .modal.fly-left div {
     animation-duration: .5s;
@@ -231,14 +235,17 @@
     from { left: 0; }
     to { left: -100%; }
   }
+
   @keyframes fly-right {
     from { right: 0; }
     to { right: -100%; }
   }
+
   @keyframes flybackleft {
     from { left: -100%; }
     to { left: 0%; }
   }
+
   @keyframes flybackright {
     from { right: -100%; }
     to { right: 0%; }
@@ -248,18 +255,15 @@
     opacity: 0;
     align-items: center;
     justify-content: center;
-    display: -webkit-box;
-    display: -webkit-flex;
-    display: -ms-flexbox;
     display: flex;
     position: absolute;
     top: 0;
     width: 100%;
     height: 100%;
   }
-  .modal.show div {
-    opacity: 1;
-  }
+
+  .modal.show div { opacity: 1; }
+
   .modal img {
     max-width: 90%;
     max-height: 90%;
@@ -273,9 +277,10 @@
   }
 
   h2 {
-    font: 16px/1 'Fauna One', Georgia, serif;
+    font: 16px/1 'Playfair Display', Georgia, serif;
     margin: 20px 0;
   }
+
   h2:before, h2:after {
     content: '"';
   }
@@ -284,27 +289,14 @@
     text-decoration: none;
     color: #525252;
   }
-  a:hover {
-    color: #f2617c;
-  }
 
-  p {
-    color: #b9b9b9;
-  }
-
-  body {
-    margin: 0;
-  }
-
-  html {
-    margin: 0 auto;
-  }
+  a:hover { color: #f2617c; }
+  p { color: #b9b9b9; }
+  body { margin: 0; }
+  html { margin: 0 auto; }
 
   .head {
     height: 100vh;
-    display: -webkit-box;
-    display: -webkit-flex;
-    display: -ms-flexbox;
     display: flex;
     align-items: stretch;
     flex-direction: column;

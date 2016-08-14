@@ -11,10 +11,7 @@
   const getHash = () => document.location.hash.substr(1)
   const convertBase64 = str => window.atob(str)
   const fetchJson = (url, callback) => fetch(url).then(response => response.json()).then(callback)
-  const metaUrl = str => {
-    const part = str.split(':');
-    return `https://gist.githubusercontent.com/${part[0]}/${part[1]}/raw/Meta.json`
-  }
+  const metaUrl = parts => `https://gist.githubusercontent.com/${parts[0]}/${parts[1]}/raw/Meta.json`
   const insert = (elementId, template) =>  {
     const elm = document.createElement('div')
     elm.innerHTML = template
@@ -24,25 +21,28 @@
   let modalImage, modal;
 
   class ImageGrid {
-    constructor(gridBasis=300, className='grid') {
+    constructor(gridBasis=300, className="grid") {
       this.gridBasis = gridBasis
       this.className = className
+      this.gridElement = this.gridElement.bind(this)
     }
 
-    buildGrid(images, gridBasis=this.gridBasis, className=this.className) {
-      images.forEach(function (image) {
+    gridElement(image) {
         var img = new Image()
         var ratio = image.width_m / image.height_m
-        const elm = `<div class="${className}__element"
+        const elm = `<div class="${this.className}__element"
                data-image="${image.url_l}"
-               style="flex-basis: ${gridBasis*ratio}px; flex-grow: ${ratio}">
+               style="flex-basis: ${this.gridBasis*ratio}px; flex-grow: ${ratio}">
             <img src="${image.url_m}">
-            <div class="${className}__title">
+            <div class="${this.className}__title">
               <p>${image.title}</p>
             </div>
           </div>`
         insert("grid", elm)
-      })
+    }
+
+    buildGrid(images) {
+      images.forEach(this.gridElement)
     }
   }
 
@@ -64,12 +64,10 @@
 
   const init = () => {
     const urlHash = getHash()
-    if (!urlHash) {
-      return;
-    }
+    if (!urlHash) return;
 
     const metaInfo = convertBase64(urlHash)
-    const url = metaUrl(metaInfo)
+    const url = metaUrl(metaInfo.split(':'))
 
     modalImage = byId('image')
     modal = byId('modal')
@@ -100,12 +98,12 @@
       switch (e.key) {
         case 'ArrowRight':
           nextImg = currentImg.nextElementSibling
-          if (!nextImg) break
+          if (!nextImg) break // We're at the first image, do nothing.
           fly('left')
           break
         case 'ArrowLeft':
           nextImg = currentImg.previousElementSibling
-          if (! nextImg) break
+          if (! nextImg) break // We're at the last image, do nothing.
           fly('right')
           break
         case 'Escape':

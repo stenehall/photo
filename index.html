@@ -6,14 +6,15 @@
   <title></title>
   <meta name="description" content="" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="style.css">
   <script>
-  const byId = (elm) => document.getElementById(elm)
+  const byId = elm => document.getElementById(elm)
   const getHash = () => document.location.hash.substr(1)
   const convertBase64 = str => window.atob(str)
   const fetchJson = (url, callback) => fetch(url).then(response => response.json()).then(callback)
   const metaUrl = parts => `https://gist.githubusercontent.com/${parts[0]}/${parts[1]}/raw/Meta.json`
   const insert = (elementId, template) =>  {
-    const elm = document.createElement('div')
+    const elm = document.createElement("div")
     elm.innerHTML = template
     byId(elementId).innerHTML += elm.innerHTML
   }
@@ -47,13 +48,13 @@
   }
 
   const closeModal = () => {
-    document.querySelector('.active').classList.remove('active')
-    byId('modal').classList.remove('show')
+    document.querySelector(".active").classList.remove("active")
+    byId("modal").classList.remove("show")
     modalImage.onload = null
   }
 
-  const fly = (direction) => {
-    const opposite = direction === 'left' ? 'right' : 'left'
+  const fly = direction => {
+    const opposite = direction === "left" ? "right" : "left"
     modal.classList.add(`fly-${direction}`)
     modalImage.onload = () => {
       modal.classList.remove(`fly-${direction}`)
@@ -62,68 +63,74 @@
     }
   }
 
+  const setStyle = style => {
+    byId("body", `<style>${style}</style>`)
+  }
+
   const init = () => {
     const urlHash = getHash()
     if (!urlHash) return;
 
     const metaInfo = convertBase64(urlHash)
-    const url = metaUrl(metaInfo.split(':'))
+    const url = metaUrl(metaInfo.split(":"))
 
-    modalImage = byId('image')
-    modal = byId('modal')
+    modalImage = byId("image")
+    modal = byId("modal")
 
     // Fetch json container
     fetchJson(url, response => {
       // Once we've got our json container fetch photoset info and the actuall photos
       fetchJson(response.info, getInfo)
       fetchJson(response.photoset, getPhotos)
+
+      if (response.style) setStyle(response.style)
     })
 
-    byId('modal').addEventListener('click', closeModal)
+    byId("modal").addEventListener("click", closeModal)
 
-    byId('grid').addEventListener('click', e => {
-      byId('image').src = e.path[1].getAttribute('data-image')
-      byId('modal').classList.add('show')
-      e.path[1].classList.add('active')
+    byId("grid").addEventListener("click", e => {
+      byId("image").src = e.path[1].getAttribute("data-image")
+      byId("modal").classList.add("show")
+      e.path[1].classList.add("active")
     })
 
-    window.addEventListener('keydown', e => {
+    window.addEventListener("keydown", e => {
       var nextImg
-      var currentImg = document.querySelector('.active')
-      modal.classList.remove('fly-right')
-      modal.classList.remove('fly-left')
-      modal.classList.remove('flybackright')
-      modal.classList.remove('flybackleft')
+      var currentImg = document.querySelector(".active")
+      modal.classList.remove("fly-right")
+      modal.classList.remove("fly-left")
+      modal.classList.remove("flybackright")
+      modal.classList.remove("flybackleft")
 
       switch (e.key) {
-        case 'ArrowRight':
+        case "ArrowRight":
           nextImg = currentImg.nextElementSibling
           if (!nextImg) break // We're at the first image, do nothing.
-          fly('left')
+          fly("left")
           break
-        case 'ArrowLeft':
+        case "ArrowLeft":
           nextImg = currentImg.previousElementSibling
           if (! nextImg) break // We're at the last image, do nothing.
-          fly('right')
+          fly("right")
           break
-        case 'Escape':
+        case "Escape":
           closeModal()
           break
       }
 
       if (nextImg) {
         setTimeout(() => {
-          currentImg.classList.remove('active')
-          nextImg.classList.add('active')
-          modalImage.src = nextImg.getAttribute('data-image')
-        }, 500)
+          currentImg.classList.remove("active")
+          nextImg.classList.add("active")
+          modalImage.src = nextImg.getAttribute("data-image")
+        }, 200)
       }
     }, false)
   }
 
   const getInfo = response => {
     const {title, description, username} = response.photoset;
-    const template = `<div class="heading" id="heading">
+    const template = `<div id="heading">
         <h1>${title._content}</h1>
         <h2>${description._content}</h2>
         <p>
@@ -140,184 +147,22 @@
    * Set a cover photo for the photoset.
    * If no primary photo is selected default to the first photo in the photoset
    **/
-  const setCoverPhoto = photoset => {
-    var primary = photoset.photo.filter(photo => photo.isprimary == '1')
+  const setCoverPhoto = photos => {
+    var primary = photos.filter(photo => photo.isprimary == "1")
     primary = primary.length ? primary[0] : photos[0]
-    byId('header').style.backgroundImage = `url(${primary.url_o})`
+    byId("cover-photo").style.backgroundImage = `url(${primary.url_o})`
   }
 
   const getPhotos = response => {
-    setCoverPhoto(response.photoset)
+    setCoverPhoto(response.photoset.photo)
     new ImageGrid().buildGrid(response.photoset.photo)
   }
   </script>
-  <style>
-  .grid {
-    display: flex;
-    flex-wrap: wrap;
-    padding: 38px;
-    background: #f7f8fa;
-    border-top: 1px solid #eeeff2;
-  }
-
-  .grid img { width: 100%; }
-
-  .grid__element {
-    position: relative;
-    margin: 5px;
-    line-height: 0;
-    cursor: pointer;
-  }
-
-  .grid__element:hover .grid__title {
-    opacity: 1;
-    transition: opacity .4s;
-  }
-
-  .grid__title {
-    opacity: 0;
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    box-sizing: border-box;
-    padding: 20px 10px 15px;
-    background: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.7) 100%);
-  }
-
-  .grid__title p {
-    font: 14px/1 Arial, Helvetica, sans-serif;
-    color: #fff;
-    margin: 0;
-  }
-
-  .modal {
-    position: fixed;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    background: rgba(0, 0, 0, 0.8);
-    z-index: 99999;
-    display: none;
-    transition: opacity .4s ease-in;
-  }
-
-  .modal.show { display: block }
-
-  .modal.fly-left div {
-    animation-duration: .5s;
-    animation-name: fly-left;
-    animation-fill-mode: forwards;
-  }
-
-  .modal.fly-right div {
-    animation-duration: .5s;
-    animation-name: fly-right;
-    animation-fill-mode: forwards;
-  }
-
-  .modal.flybackright div {
-    animation-duration: .5s;
-    animation-name: flybackright;
-    animation-fill-mode: forwards;
-  }
-
-  .modal.flybackleft div {
-    animation-duration: .5s;
-    animation-name: flybackleft;
-    animation-fill-mode: forwards;
-  }
-
-  @keyframes fly-left {
-    from { left: 0; }
-    to { left: -100%; }
-  }
-
-  @keyframes fly-right {
-    from { right: 0; }
-    to { right: -100%; }
-  }
-
-  @keyframes flybackleft {
-    from { left: -100%; }
-    to { left: 0%; }
-  }
-
-  @keyframes flybackright {
-    from { right: -100%; }
-    to { right: 0%; }
-  }
-
-  .modal div {
-    opacity: 0;
-    align-items: center;
-    justify-content: center;
-    display: flex;
-    position: absolute;
-    top: 0;
-    width: 100%;
-    height: 100%;
-  }
-
-  .modal.show div { opacity: 1; }
-
-  .modal img {
-    max-width: 90%;
-    max-height: 90%;
-    position: absolute;
-    transition: left 4s ease-in, right 4s ease-in;
-  }
-
-  h1 {
-    font: 32px/1 'Playfair Display', Georgia, serif;
-    margin: 0;
-  }
-
-  h2 {
-    font: 16px/1 'Playfair Display', Georgia, serif;
-    margin: 20px 0;
-  }
-
-  h2:before, h2:after {
-    content: '"';
-  }
-
-  a {
-    text-decoration: none;
-    color: #525252;
-  }
-
-  a:hover { color: #f2617c; }
-  p { color: #b9b9b9; }
-  body { margin: 0; }
-  html { margin: 0 auto; }
-
-  .head {
-    height: 100vh;
-    display: flex;
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  header {
-    height: 100%;
-    background-size: cover;
-    background-position: center center;
-  }
-
-  .heading {
-    margin: 40px 50px;
-    text-align: center;
-    color: #525252;
-  }
-
-  </style>
 </head>
-<body>
-  <div id="head" class="head">
-    <header id="header"></header>
-  </div>
+<body id="body">
+  <header id="head">
+    <div id="cover-photo"></div>
+  </header>
   <div id="grid" class="grid"></div>
   <div id="modal" class="modal">
     <div>

@@ -95,9 +95,9 @@
 
     byId("grid").addEventListener("click", e => {
       console.log(e);
-      if(e.path.length !== 7 && e.path.length !== 6) return;
+      if(e.path.length !== 8 && e.path.length !== 9) return;
 
-      const image = e.path.length === 7 ? e.path[1] : e.path[0]
+      const image = e.path.length === 9 ? e.path[1] : e.path[0]
       if (image) {
         byId("image").src = image.getAttribute("data-image")
         byId("modal").classList.add("show")

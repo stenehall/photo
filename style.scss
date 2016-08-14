@@ -1,0 +1,132 @@
+.grid {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 38px;
+  background: #f7f8fa;
+  border-top: 1px solid #eeeff2;
+
+  img { width: 100%; }
+
+  &__element {
+    position: relative;
+    margin: 5px;
+    line-height: 0;
+    cursor: pointer;
+  }
+
+  &__element:hover .grid__title {
+    opacity: 1;
+    transition: opacity .4s;
+  }
+
+  &__title {
+    opacity: 0;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 20px 10px 15px;
+    background: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.7) 100%);
+  }
+
+  &__title p {
+    font: 14px/1 Arial, Helvetica, sans-serif;
+    color: #fff;
+    margin: 0;
+  }
+}
+
+.modal {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: rgba(0, 0, 0, 0.8);
+  z-index: 99999;
+  display: none;
+  transition: opacity .4s ease-in;
+
+  &.show { display: block }
+
+  &.fly-left, &.fly-left, &.flybackright, &.flybackleft {
+    div {
+      animation-duration: .2s;
+      animation-fill-mode: forwards;
+    }
+  }
+
+  &.fly-left div { animation-name: fly-left; }
+  &.fly-right div { animation-name: fly-right; }
+  &.flybackright div { animation-name: flybackright; }
+  &.flybackleft div { animation-name: flybackleft; }
+  @keyframes fly-left       { from { left: 0; }      to { left: -100%; } }
+  @keyframes fly-right      { from { right: 0; }     to { right: -100%; } }
+  @keyframes flybackleft    { from { left: -100%; }  to { left: 0%; } }
+  @keyframes flybackright   { from { right: -100%; } to { right: 0%; } }
+
+  div {
+    opacity: 0;
+    align-items: center;
+    justify-content: center;
+    display: flex;
+    position: absolute;
+    top: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  &.show div { opacity: 1; }
+
+  img {
+    max-width: 90%;
+    max-height: 90%;
+    position: absolute;
+    transition: left 4s ease-in, right 4s ease-in;
+  }
+}
+
+h1 {
+  font: 32px/1 'Playfair Display', Georgia, serif;
+  margin: 0;
+}
+
+h2 {
+  font: 16px/1 'Playfair Display', Georgia, serif;
+  margin: 20px 0;
+
+  &:before, &:after {
+    content: '"';
+  }
+}
+
+a {
+  text-decoration: none;
+  color: #525252;
+
+  &:hover { color: #f2617c; }
+}
+
+p { color: #b9b9b9; }
+body { margin: 0; }
+html { margin: 0 auto; }
+
+header {
+  height: 100vh;
+  display: flex;
+  align-items: stretch;
+  flex-direction: column;
+}
+
+ #cover-photo {
+  height: 100%;
+  background-size: cover;
+  background-position: center center;
+}
+
+#heading {
+  margin: 40px 50px;
+  text-align: center;
+  color: #525252;
+}

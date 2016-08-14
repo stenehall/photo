@@ -9,7 +9,8 @@
   <link rel="stylesheet" href="style.css">
   <script>
   const byId = elm => document.getElementById(elm)
-  const getHash = () => document.location.hash.substr(1)
+  const getHash = () => document.location.hash.substr(1).split(":")[0]
+  const getDeepLink = () => document.location.hash.substr(1).split(":")[1]
   const convertBase64 = str => window.atob(str)
   const fetchJson = (url, callback) => fetch(url).then(response => response.json()).then(callback)
   const metaUrl = parts => `https://gist.githubusercontent.com/${parts[0]}/${parts[1]}/raw/Meta.json`
@@ -19,6 +20,7 @@
     byId(elementId).innerHTML += elm.innerHTML
   }
 
+  let urlHash;
   let modalImage, modal;
 
   class ImageGrid {
@@ -33,6 +35,7 @@
         var ratio = image.width_m / image.height_m
         const elm = `<div class="${this.className}__element"
                data-image="${image.url_l}"
+               data-id="${image.id}"
                style="flex-basis: ${this.gridBasis*ratio}px; flex-grow: ${ratio}">
             <img src="${image.url_m}">
             <div class="${this.className}__title">
@@ -51,6 +54,8 @@
     document.querySelector(".active").classList.remove("active")
     byId("modal").classList.remove("show")
     modalImage.onload = null
+    document.location.hash = urlHash
+
   }
 
   const fly = direction => {
@@ -68,7 +73,7 @@
   }
 
   const init = () => {
-    const urlHash = getHash()
+    urlHash = getHash()
     if (!urlHash) return;
 
     const metaInfo = convertBase64(urlHash)
@@ -89,9 +94,13 @@
     byId("modal").addEventListener("click", closeModal)
 
     byId("grid").addEventListener("click", e => {
-      byId("image").src = e.path[1].getAttribute("data-image")
-      byId("modal").classList.add("show")
-      e.path[1].classList.add("active")
+      const image = e.path.length === 7 ? e.path[1] : e.path[0]
+      if (image) {
+        byId("image").src = image.getAttribute("data-image")
+        byId("modal").classList.add("show")
+        image.classList.add("active")
+        document.location.hash = `${urlHash}:${image.getAttribute("data-id")}`
+      }
     })
 
     window.addEventListener("keydown", e => {
@@ -156,7 +165,12 @@
   const getPhotos = response => {
     setCoverPhoto(response.photoset.photo)
     new ImageGrid().buildGrid(response.photoset.photo)
-  }
+
+    const deepLink = getDeepLink()
+    if (deepLink) {
+      document.querySelector(`[data-id="${deepLink}"]`).click()
+    }
+   }
   </script>
 </head>
 <body id="body">
